@@ -1,3 +1,3 @@
 # violin
 
-A UEFI bootloader
+A x86_64 UEFI bootloader
