@@ -1,15 +1,23 @@
 MAKEFLAGS += --no-print-directory
 
+CXX_INCLUDE := -I src \
+			   -I lib \
+			   -I src/include
+
+CXX_DEFINES := -D POLAR_BOOT_DEBUG
+
 CXX := clang
 LD := ld.lld
 CXXFLAGS := -target x86_64-windows-unknown -ffreestanding -fshort-wchar \
            -Wno-unused-command-line-argument -Wno-void-pointer-to-int-cast \
-           -Wno-int-to-void-pointer-cast -Wno-int-to-pointer-cast -g -Ilib 
+           -Wno-int-to-void-pointer-cast -Wno-int-to-pointer-cast -g $(CXX_INCLUDE) \
+		   $(CXX_DEFINES)
 
 LDFLAGS := -target x86_64-windows-unknown -nostdlib -fuse-ld=lld \
            -Wl,/subsystem:efi_application -Wl,/entry:__polar_boot_main -g
 
-
+# 
+EFI_FIRMWARE := /usr/share/OVMF/x64/OVMF.fd
 OBJ_DIR := build
 BIN_DIR := bin
 TARGET := $(BIN_DIR)/violin.efi
@@ -24,8 +32,26 @@ all: build $(BIN_DIR)/$(IMAGE_NAME)
 
 build: $(TARGET)
 
-$(TARGET): $(OBJ_FILES)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJ_FILES)
+REPO_URL := https://github.com/Volartrix/arctic-lib
+HEADER_DIR := lib/arctic-lib/
+
+BIN_DEST := lib/bin
+
+arctic-lib-setup:
+	@rm -rf lib/arctic-lib
+	@mkdir -p $(HEADER_DIR)
+	@rm -rf $(HEADER_DIR)/*
+	@git clone $(REPO_URL) $(HEADER_DIR)
+	@rm -rf $(HEADER_DIR)/^include
+	@mv $(HEADER_DIR)/include/* $(HEADER_DIR)
+	@rm -rf $(HEADER_DIR)/include
+# Get latest release static library and copy it to the bin directory
+	@wget -O $(HEADER_DIR)/libarctic.a https://github.com/Volartrix/arctic-lib/releases/download/dev/libarctic.a
+	@cp $(HEADER_DIR)/libarctic.a $(BIN_DEST)/arctic.lib
+	
+
+$(TARGET): $(OBJ_FILES) arctic-lib-setup
+	$(CXX) $(LDFLAGS) -o $@ $(OBJ_FILES) -L$(BIN_DEST) -larctic
 
 $(OBJ_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
@@ -43,7 +69,7 @@ $(BIN_DIR)/$(IMAGE_NAME): $(TARGET)
 
 run: $(BIN_DIR)/$(IMAGE_NAME)
 	@qemu-system-x86_64 -drive file=$(BIN_DIR)/$(IMAGE_NAME),format=raw -m 2G \
-						-bios /usr/share/OVMF/x64/OVMF.fd -boot order=c
+						-bios $(EFI_FIRMWARE) -boot order=c
 
 clean:
 	

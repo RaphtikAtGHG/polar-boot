@@ -1,3 +1,7 @@
 [submodule "lib/efi"]
 	path = lib/efi
 	url = https://github.com/aurixos/efi.git
+
+[submodule "lib/arctic-lib"]
+	path = lib/arctic-lib
+	url = https://github.com/Volartrix/arctic-lib
