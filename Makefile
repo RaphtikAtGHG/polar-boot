@@ -6,8 +6,9 @@ CXXFLAGS := -target x86_64-windows-unknown -ffreestanding -fshort-wchar \
            -Wno-unused-command-line-argument -Wno-void-pointer-to-int-cast \
            -Wno-int-to-void-pointer-cast -Wno-int-to-pointer-cast -g -Ilib 
 
-LDFLAGS := -target x86_64-windows-unknown -nostdlib \
-          -Wl,-entry:boot_main -Wl,-subsystem:efi_application -fuse-ld=lld-link -g
+LDFLAGS := -target x86_64-pc-win32-coff -nostdlib -fuse-ld=lld \
+           -Wl,/subsystem:efi_application -Wl,/entry:boot_main -g
+
 
 OBJ_DIR := build
 BIN_DIR := bin
