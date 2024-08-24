@@ -6,3 +6,4 @@ bin/
 *.img
 *.hdd
 mnt/
+mnt_temp/
