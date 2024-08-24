@@ -15,7 +15,7 @@ TARGET := $(BIN_DIR)/violin.efi
 IMAGE_NAME := boot.img
 UEFI_FIRMWARE := /usr/share/OVMF/x64/OVMF.fd
 
-.PHONY: all build $(BIN_DIR)/$(IMAGE_NAME) run clean
+.PHONY: all build $(BIN_DIR)/$(IMAGE_NAME) run clean clean-disk
 
 SRC_FILES := $(shell find src -name '*.c')
 OBJ_FILES := $(SRC_FILES:src/%.c=$(OBJ_DIR)/%.o)
@@ -32,13 +32,14 @@ $(OBJ_DIR)/%.o: src/%.c
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BIN_DIR)/$(IMAGE_NAME): $(TARGET)
-	@dd if=/dev/zero of=$(BIN_DIR)/$(IMAGE_NAME) bs=1M count=64 status=progress
-	@mkfs.fat -F32 -n EFI_SYSTEM $(BIN_DIR)/$(IMAGE_NAME)
-	@mmd -i $(BIN_DIR)/$(IMAGE_NAME) ::/EFI
-	@mmd -i $(BIN_DIR)/$(IMAGE_NAME) ::/EFI/BOOT
-	@mcopy -i $(BIN_DIR)/$(IMAGE_NAME) $(TARGET) ::/EFI/BOOT/BOOTX64.EFI
-	@mdir -i $(BIN_DIR)/$(IMAGE_NAME)  ::/EFI/BOOT/
-	@echo "Image created: $(BIN_DIR)/$(IMAGE_NAME)"
+	@dd if=/dev/zero of=$(BIN_DIR)/$(IMAGE_NAME) bs=1M count=64
+	@mkfs.fat -F 32 -n EFI_SYSTEM $(BIN_DIR)/$(IMAGE_NAME)
+	@mkdir -p mnt
+	@sudo mount -o loop $(BIN_DIR)/$(IMAGE_NAME) mnt
+	@sudo mkdir -p mnt/EFI/BOOT
+	@sudo cp $(TARGET) mnt/EFI/BOOT/BOOTX64.EFI
+	@sudo umount mnt
+	@rmdir mnt
 
 run: $(BIN_DIR)/$(IMAGE_NAME)
 	@qemu-system-x86_64 -drive file=$(BIN_DIR)/$(IMAGE_NAME),format=raw -m 2G \
@@ -46,4 +47,9 @@ run: $(BIN_DIR)/$(IMAGE_NAME)
 		-drive if=pflash,unit=1,format=raw,file=/usr/share/OVMF/x64/OVMF_VARS.fd -boot order=c
 
 clean:
+	
 	@rm -rf $(OBJ_DIR) $(BIN_DIR) $(TARGET) $(IMAGE_NAME)
+	
+clean-disk:
+	@sudo umount mnt
+	@rm -rf mnt
