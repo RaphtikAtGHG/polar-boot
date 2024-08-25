@@ -36,4 +36,5 @@ void __polar_boot_common(EFI_HANDLE IHs, EFI_SYSTEM_TABLE *STs) {
     ST = STs;
 
     output_string("Loaded common boot function\r\n");
+
 }
