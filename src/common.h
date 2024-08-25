@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <efi/efi.h>
+#include <stddef.h>
 
 extern EFI_HANDLE IH;
 extern EFI_SYSTEM_TABLE *ST;
