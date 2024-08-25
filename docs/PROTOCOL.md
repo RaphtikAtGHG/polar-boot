@@ -8,7 +8,7 @@ For a valid PolarBoot kernel image the file **must** be an ELF executable and co
 
 | Offset | Type      | Name                 |Value                 |
 |--------|-----------|----------------------|----------------------|
-| 0x00   | uint8 x 5 | Magi                 | Must be 0x50424F4F54 |
+| 0x00   | uint8 x 5 | Magic                | Must be 0x50424F4F54 |
 | 0x05   | uint8     | Target Archictecture | See below            |
 | 0x06   | uint64    | Start Adress         | See below            |
 | 0x0E   | uint32    | CRC32 Signature      | See below            |
@@ -29,13 +29,13 @@ On successful boot the PolarBoot protocol will return a structure with fields su
 ### Framebuffer
 
 The struct for the framebuffer will be like this:
-| Offset | Type   | Name                | Value     |
-|--------|--------|---------------------|-----------|
-| 0x00   | uint64 | Framebuffer Address | See below |
-| 0x08   | uint32 | Framebugger Width   | See below |
-| 0x0C   | uint32 | Framebuffer Height  | See below |
-| 0x10   | uint32 | Framebuffer Pitch   | See below |
-| 0x14   | uint32 | Framebuffer BPP     | See below |
+| Offset | Type               | Name                | Value     |
+|--------|--------------------|---------------------|-----------|
+| 0x00   | uint64             | Framebuffer Address | See below |
+| 0x08   | uint32             | Framebugger Width   | See below |
+| 0x0C   | uint32             | Framebuffer Height  | See below |
+| 0x10   | uint32             | Framebuffer Pitch   | See below |
+| 0x14   | uint32             | Framebuffer BPP     | See below |
 
 The following Values are excepted:
 * **Framebufffer Address:** The start address of the framebuffer.
@@ -43,8 +43,6 @@ The following Values are excepted:
 * **Framebuffer Height:** The height of the framebuffer in pixels.
 * **Framebuffer Pitch:** The number of bytes per line of the framebuffer (includes padding).
 * **Framebuffer BPP:** Bits per pixel, indicating the color depth of each pixel.
-
-
 ### RAM Filesystem
 
 | Offset | Type   | Name                   | Value     |
@@ -89,14 +87,36 @@ Here is a structure of the memory map:
 
 Here are what the values mean:
 * **Memory Map Address:** The start adress of the memmap entry structs
-* **Memory Map Entry Count:** The count of memmap entry structs
+* **Memory Map Entry Count:** The count of memmap entry structs maximum 64 entries
 * **Reserved:** Reserved for padding/future use
+
+### Complete Struct
+
+| Offset | Size       | Name            | Value     |
+|--------|------------|-----------------|-----------|
+| 0x00   | 24 bytes   | Framebuffer     | See below |
+| 0x18   | 16 bytes   | RAM Filesystem  | See below |
+| 0x2A   | 1 Kilobyte | Memorymap Table | See below |
+
+
+Here are what the values mean:
+* **Framebuffer:** The framebuffer struct from before
+* **RAM Filesystem:** The RAM Filesystem struct from before
+* **Memorymap Table:** The memorymap table with the 64 entries though no all needn't be used. 16 bytes per struct x 64 entries = 1024 bytes = 1 Kilobyte
 
 -- END OF SPECIFIC STRUCTS --
 
-Please be aware that the structure MUST be accessed and be available at **0x0000008000000000** after the struct has been utilized it can be overwritten
+Please be aware that the structure MUST be accessed and be available at **0xFFFFFFFF8000DEAD** after the struct has been utilized it can be overwritten
+
+## Config Values
+
+The Polar Boot kernel can be configured by using a configuration file, which the bootloader can control **BUT** the following values **MUST** be present:
+* **KERNEL PATH:** The path of the kernel in the filesystem it must be in the EFI System Partition
+* **GRAPHICS MODE:** Must be a valid UEFI GOP mode.
+* **RAMFS PATH [NULLABLE]:** Can be empty. This will contain the path of the RAM Filesystem tarball.
+* **KERNEL COMMAND LINE [NULLABLE]:** Can be empty. This will contain the command line of the kernel. The kernel can interpret it as it wants.
 
 ## Info
 
-Polar Boot Protocol Specification Version 1.0
+Polar Boot Protocol Specification Version 1.0.1
 (c) 2024 Volartrix Team 
