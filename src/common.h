@@ -3,6 +3,8 @@
 
 #include <efi/efi.h>
 #include <stddef.h>
+#include <include/fs/sfs.h>
+#include <include/malloc.h>
 
 extern EFI_HANDLE IH;
 extern EFI_SYSTEM_TABLE *ST;
